@@ -195,7 +195,7 @@ export default function StatsPage() {
 
   if (loading) {
     return (
-      <main className="min-h-screen bg-[#101415] text-[#e0e3e5] py-16 px-4">
+      <main className="min-h-screen bg-background text-on-surface py-16 px-4">
         <div className="text-center">
           <p className="text-lg">İstatistikler yükleniyor...</p>
         </div>
@@ -204,15 +204,15 @@ export default function StatsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-[#101415] text-[#e0e3e5] py-16 px-4">
+    <main className="min-h-screen bg-background text-on-surface py-16 px-4">
       {needsAuth && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1d2022] border-l-4 border-[#700080] rounded-lg p-8 max-w-md text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Giriş Yapmanız Gerekiyor</h2>
-            <p className="text-[#c6c6cd] mb-6">İstatistikleri görmek için lütfen giriş yapınız.</p>
+          <div className="bg-surface-container-lowest border-l-4 border-secondary rounded-lg p-8 max-w-md text-center">
+            <h2 className="text-2xl font-bold text-primary mb-4">Giriş Yapmanız Gerekiyor</h2>
+            <p className="text-on-surface-variant mb-6">İstatistikleri görmek için lütfen giriş yapınız.</p>
             <Link
               to="/"
-              className="inline-block px-8 py-3 bg-[#700080] hover:bg-[#9224dc] text-white rounded-lg transition-colors font-bold"
+              className="inline-block px-8 py-3 bg-secondary hover:bg-primary-container text-on-secondary rounded-lg transition-colors font-bold"
             >
               Ana Sayfaya Dön
             </Link>
@@ -221,10 +221,10 @@ export default function StatsPage() {
       )}
       <div className="max-w-[1400px] mx-auto">
         <div className="mb-12">
-          <h1 className="font-['Newsreader'] text-4xl font-bold text-[#e0e3e5] mb-2">
+          <h1 className="font-display text-4xl font-bold text-primary mb-2">
             Platform İstatistikleri
           </h1>
-          <p className="font-['IBM_Plex_Mono'] text-xs text-[#45464c] uppercase tracking-widest">
+          <p className="font-label text-xs text-on-surface-variant uppercase tracking-widest">
             Üniversite, Bölüm ve Firma Analizi
           </p>
         </div>
@@ -234,7 +234,7 @@ export default function StatsPage() {
           <select
             value={selectedUniversity}
             onChange={(e) => setSelectedUniversity(e.target.value)}
-            className="bg-[#1d2022] border border-[#252c38] rounded-lg px-4 py-3 text-[#e0e3e5] focus:outline-none focus:ring-2 focus:ring-[#700080]"
+            className="bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/40"
           >
             <option value="">Tüm Üniversiteler</option>
             {universities.map((u) => (
@@ -247,7 +247,7 @@ export default function StatsPage() {
           <select
             value={selectedDepartment}
             onChange={(e) => setSelectedDepartment(e.target.value)}
-            className="bg-[#1d2022] border border-[#252c38] rounded-lg px-4 py-3 text-[#e0e3e5] focus:outline-none focus:ring-2 focus:ring-[#700080]"
+            className="bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/40"
           >
             <option value="">Tüm Bölümler</option>
             {departments.map((d) => (
@@ -260,7 +260,7 @@ export default function StatsPage() {
           <select
             value={selectedCompany}
             onChange={(e) => setSelectedCompany(e.target.value)}
-            className="bg-[#1d2022] border border-[#252c38] rounded-lg px-4 py-3 text-[#e0e3e5] focus:outline-none focus:ring-2 focus:ring-[#700080]"
+            className="bg-surface-container-lowest border border-outline-variant/40 rounded-lg px-4 py-3 text-on-surface focus:outline-none focus:ring-2 focus:ring-secondary/40"
           >
             <option value="">Tüm Firmalar</option>
             {companies.map((c) => (
@@ -274,35 +274,35 @@ export default function StatsPage() {
         {/* Summary Cards */}
         {overallStats && (
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-16">
-            <div className="bg-gradient-to-br from-[#700080] to-[#1d2022] border border-[#700080]/30 rounded-xl p-6 shadow-lg">
-              <p className="font-['IBM_Plex_Mono'] text-xs text-[#F59E0B] uppercase tracking-wider mb-2">
+            <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 shadow-sm">
+              <p className="font-label text-xs text-secondary uppercase tracking-wider mb-2">
                 Toplam Staj
               </p>
-              <p className="font-['Newsreader'] text-3xl font-bold text-[#e0e3e5]">
+              <p className="font-display text-3xl font-bold text-primary">
                 {overallStats.totalInternships}
               </p>
             </div>
-            <div className="bg-gradient-to-br from-[#456552] to-[#1d2022] border border-[#456552]/30 rounded-xl p-6 shadow-lg">
-              <p className="font-['IBM_Plex_Mono'] text-xs text-[#F59E0B] uppercase tracking-wider mb-2">
+            <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 shadow-sm">
+              <p className="font-label text-xs text-secondary uppercase tracking-wider mb-2">
                 Firmalar
               </p>
-              <p className="font-['Newsreader'] text-3xl font-bold text-[#e0e3e5]">
+              <p className="font-display text-3xl font-bold text-primary">
                 {overallStats.totalCompanies}
               </p>
             </div>
-            <div className="bg-gradient-to-br from-[#F59E0B] to-[#1d2022] border border-[#F59E0B]/30 rounded-xl p-6 shadow-lg">
-              <p className="font-['IBM_Plex_Mono'] text-xs text-[#700080] uppercase tracking-wider mb-2">
+            <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 shadow-sm">
+              <p className="font-label text-xs text-secondary uppercase tracking-wider mb-2">
                 Üniversiteler
               </p>
-              <p className="font-['Newsreader'] text-3xl font-bold text-[#e0e3e5]">
+              <p className="font-display text-3xl font-bold text-primary">
                 {overallStats.totalUniversities}
               </p>
             </div>
-            <div className="bg-gradient-to-br from-[#1E293B] to-[#050B1A] border border-[#700080]/30 rounded-xl p-6 shadow-lg">
-              <p className="font-['IBM_Plex_Mono'] text-xs text-[#F59E0B] uppercase tracking-wider mb-2">
+            <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-6 shadow-sm">
+              <p className="font-label text-xs text-secondary uppercase tracking-wider mb-2">
                 Ort. Puan
               </p>
-              <p className="font-['Newsreader'] text-3xl font-bold text-[#F59E0B]">
+              <p className="font-display text-3xl font-bold text-secondary">
                 {(overallStats.averageScore ?? 0).toFixed(1)}
               </p>
             </div>
@@ -311,8 +311,8 @@ export default function StatsPage() {
 
         {/* Charts */}
         {universityStats.length > 0 && (
-          <div className="bg-[#1d2022] border border-[#252c38] rounded-xl p-8 mb-12 shadow-xl">
-            <h2 className="font-['Newsreader'] text-2xl font-bold text-[#e0e3e5] mb-6">
+          <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-8 mb-12 shadow-xl">
+            <h2 className="font-display text-2xl font-bold text-primary mb-6">
               Üniversite Bazlı Staj Dağılımı
             </h2>
             <div style={{ height: '400px' }}>
@@ -322,7 +322,7 @@ export default function StatsPage() {
                 indexBy="universityName"
                 margin={{ top: 20, right: 30, bottom: 150, left: 60 }}
                 padding={0.3}
-                colors={['#700080']}
+                colors={['#0058bd']}
                 animate={true}
                 motionConfig="molasses"
                 axisBottom={{
@@ -331,11 +331,11 @@ export default function StatsPage() {
                 }}
                 theme={{
                   axis: {
-                    ticks: { line: { stroke: '#252c38' }, text: { fill: '#e0e3e5', fontSize: 11 } },
-                    legend: { text: { fill: '#e0e3e5', fontSize: 14 } },
+                    ticks: { line: { stroke: '#c4c6d1' }, text: { fill: '#141c28', fontSize: 11 } },
+                    legend: { text: { fill: '#141c28', fontSize: 14 } },
                   },
-                  grid: { line: { stroke: '#252c38' } },
-                  labels: { text: { fill: '#e0e3e5' } },
+                  grid: { line: { stroke: '#c4c6d1' } },
+                  labels: { text: { fill: '#141c28' } },
                 }}
               />
             </div>
@@ -344,8 +344,8 @@ export default function StatsPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {departmentStats.length > 0 && (
-            <div className="bg-[#1d2022] border border-[#252c38] rounded-xl p-8 shadow-xl">
-              <h2 className="font-['Newsreader'] text-2xl font-bold text-[#e0e3e5] mb-6">
+            <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-8 shadow-xl">
+              <h2 className="font-display text-2xl font-bold text-primary mb-6">
                 Bölüm Bazlı Ortalama Puan
               </h2>
               <div style={{ height: '350px' }}>
@@ -364,11 +364,11 @@ export default function StatsPage() {
                   }}
                   theme={{
                     axis: {
-                      ticks: { line: { stroke: '#252c38' }, text: { fill: '#e0e3e5', fontSize: 11 } },
-                      legend: { text: { fill: '#e0e3e5', fontSize: 14 } },
+                      ticks: { line: { stroke: '#c4c6d1' }, text: { fill: '#141c28', fontSize: 11 } },
+                      legend: { text: { fill: '#141c28', fontSize: 14 } },
                     },
-                    grid: { line: { stroke: '#252c38' } },
-                    labels: { text: { fill: '#e0e3e5' } },
+                    grid: { line: { stroke: '#c4c6d1' } },
+                    labels: { text: { fill: '#141c28' } },
                   }}
                 />
               </div>
@@ -376,8 +376,8 @@ export default function StatsPage() {
           )}
 
           {departmentStats.length > 0 && departmentStats.some((d) => d.internshipCount) && (
-            <div className="bg-[#1d2022] border border-[#252c38] rounded-xl p-8 shadow-xl">
-              <h2 className="font-['Newsreader'] text-2xl font-bold text-[#e0e3e5] mb-6">
+            <div className="bg-surface-container-lowest border border-outline-variant/40 rounded-xl p-8 shadow-xl">
+              <h2 className="font-display text-2xl font-bold text-primary mb-6">
                 Bölüm Dağılımı
               </h2>
               <div style={{ height: '350px' }}>
@@ -391,14 +391,14 @@ export default function StatsPage() {
                   innerRadius={0.5}
                   padAngle={0.7}
                   cornerRadius={3}
-                  colors={['#700080', '#F59E0B', '#456552', '#1E293B', '#050B1A']}
+                  colors={['#0058bd', '#b7902e', '#456552', '#15346b', '#0c70ea']}
                   arcLabel={(d) => `${d.value}`}
-                  arcLabelTextColor="#e0e3e5"
+                  arcLabelsTextColor="#ffffff"
                   animate={true}
                   motionConfig="molasses"
                   theme={{
-                    labels: { text: { fill: '#e0e3e5', fontSize: 12 } },
-                    legends: { text: { fill: '#909097', fontSize: 11 } },
+                    labels: { text: { fill: '#141c28', fontSize: 12 } },
+                    legends: { text: { fill: '#444750', fontSize: 11 } },
                   }}
                   legends={[
                     {
@@ -410,7 +410,7 @@ export default function StatsPage() {
                       itemsSpacing: 12,
                       itemWidth: 100,
                       itemHeight: 18,
-                      itemTextColor: '#909097',
+                      itemTextColor: '#444750',
                       symbolSize: 12,
                     },
                   ]}

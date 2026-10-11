@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import Navbar from './components/Navbar'
+import Toast from './components/Toast'
 import LandingPage from './pages/LandingPage'
 import EmailVerificationPage from './pages/EmailVerificationPage'
 import DiscoverPage from './pages/DiscoverPage'
@@ -28,6 +29,7 @@ export default function App() {
       <div className="min-h-screen bg-[#050B1A] text-[#F8FAFC] flex flex-col">
         {/* TÜM SİTENİN TEK VE ORTAK NAVBAR'I */}
         <Navbar />
+        <Toast />
 
         {/* Sayfa İçerikleri (Navbar 80px olduğu için pt-20 ile altından başlar) */}
         <div className="flex-1 pt-20">

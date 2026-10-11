@@ -59,9 +59,9 @@ export default function AuthCallbackPage() {
   }, [navigate])
 
   return (
-    <div className="min-h-screen bg-[#050B1A] flex flex-col items-center justify-center text-[#F8FAFC]">
-      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[#F59E0B] mb-4"></div>
-      <p className="text-lg">Giriş işleniyor, profil yükleniyor...</p>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center text-on-surface font-body">
+      <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-secondary mb-4"></div>
+      <p className="text-lg text-on-surface-variant">Giriş işleniyor, profil yükleniyor...</p>
     </div>
   )
 }

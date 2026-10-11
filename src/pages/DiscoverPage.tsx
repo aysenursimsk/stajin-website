@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { internshipService } from '../services/internshipService'
 import { lookupService } from '../services/lookupService'
+import CompanyLogo from '../components/CompanyLogo'
 
 interface InternshipReview {
   id: string | number
@@ -243,30 +244,30 @@ export default function DiscoverPage() {
   const visibleItems = filteredItems.slice((currentPage - 1) * pageSize, currentPage * pageSize)
 
   return (
-    <main className="flex-1 overflow-auto relative bg-[#101415] min-h-screen text-[#e0e3e5] font-['Inter']">
+    <main className="flex-1 overflow-auto relative bg-background min-h-screen text-on-surface font-body">
       <div className="flex flex-col w-full">
         {/* Header Section */}
         <div className="flex flex-col relative w-full px-6 py-12 z-10 overflow-hidden">
           {/* Çizgili Grid Arka Planı */}
           <div
-            className="absolute inset-0 pointer-events-none opacity-20"
+            className="absolute inset-0 pointer-events-none opacity-40"
             style={{
               backgroundImage:
-                'linear-gradient(to right, #45464c 1px, transparent 1px), linear-gradient(to bottom, #45464c 1px, transparent 1px)',
+                'linear-gradient(to right, #c4c6d1 1px, transparent 1px), linear-gradient(to bottom, #c4c6d1 1px, transparent 1px)',
               backgroundSize: '24px 24px',
             }}
           />
 
           <div className="flex flex-col lg:flex-row justify-between items-end gap-12 relative max-w-[1200px] mx-auto w-full">
             <div className="flex flex-col max-w-2xl">
-              <h1 className="font-['Newsreader'] text-4xl sm:text-5xl font-bold text-[#e0e3e5] mb-3">
+              <h1 className="font-display text-4xl sm:text-5xl font-bold text-primary mb-3 tracking-tight">
                 Staj Arşivi
               </h1>
-              <p className="text-lg text-[#c6c6cd]">
+              <p className="font-body text-lg text-on-surface-variant">
                 Öğrenci deneyimlerinin objektif ve doğrulanmış kayıtları. Kariyer hedeflerinize uygun firmaları araştırın, sektörel standartları inceleyin ve gerçek stajyer geribildirimlerini okuyun.
               </p>
             </div>
-            <div className="flex flex-col gap-1 items-end font-['IBM_Plex_Mono'] text-xs text-[#c6c6cd] text-right">
+            <div className="flex flex-col gap-1 items-end font-label text-xs text-on-surface-variant text-right">
               {/* İsteğe bağlı sağ üst istatistik alanı */}
             </div>
           </div>
@@ -277,7 +278,7 @@ export default function DiscoverPage() {
           <div className="max-w-[1200px] mx-auto w-full flex flex-col md:flex-row gap-3">
             {/* Firma Arama Input */}
             <div className="flex-1 relative group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] z-10">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant z-10">
                 domain
               </span>
               <input
@@ -285,19 +286,19 @@ export default function DiscoverPage() {
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Firma, Marka Ara..."
                 type="text"
-                className="w-full h-12 pl-12 pr-4 bg-[#272a2c] text-[#e0e3e5] text-base rounded border border-[#45464c] focus:outline-none focus:ring-1 focus:ring-[#c0c6db] shadow-sm transition-transform group-hover:scale-[1.01]"
+                className="w-full h-12 pl-12 pr-4 bg-surface-container-lowest text-on-surface text-base rounded-lg border border-outline-variant/50 focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm transition-transform group-hover:scale-[1.01]"
               />
             </div>
 
             {/* Bölüm / Sektör Filtresi */}
             <div className="w-full md:w-56 relative group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] z-10">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant z-10">
                 school
               </span>
               <select
                 value={selectedDepartment}
                 onChange={(e) => setSelectedDepartment(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 bg-[#272a2c] text-[#e0e3e5] text-base rounded border border-[#45464c] appearance-none focus:outline-none focus:ring-1 focus:ring-[#c0c6db] shadow-sm transition-transform group-hover:scale-[1.01] cursor-pointer"
+                className="w-full h-12 pl-12 pr-4 bg-surface-container-lowest text-on-surface text-base rounded-lg border border-outline-variant/50 appearance-none focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm transition-transform group-hover:scale-[1.01] cursor-pointer"
               >
                 <option value="">Bölüm (Tümü)</option>
                 {departments.map((department) => (
@@ -306,20 +307,20 @@ export default function DiscoverPage() {
                   </option>
                 ))}
               </select>
-              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] pointer-events-none">
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
                 expand_more
               </span>
             </div>
 
             {/* Şehir Filtresi */}
             <div className="w-full md:w-48 relative group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] z-10">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant z-10">
                 location_on
               </span>
               <select
                 value={selectedCity}
                 onChange={(e) => setSelectedCity(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 bg-[#272a2c] text-[#e0e3e5] text-base rounded border border-[#45464c] appearance-none focus:outline-none focus:ring-1 focus:ring-[#c0c6db] shadow-sm transition-transform group-hover:scale-[1.01] cursor-pointer"
+                className="w-full h-12 pl-12 pr-4 bg-surface-container-lowest text-on-surface text-base rounded-lg border border-outline-variant/50 appearance-none focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm transition-transform group-hover:scale-[1.01] cursor-pointer"
               >
                 <option value="">İl (Tümü)</option>
                 {cities.map((city) => (
@@ -328,26 +329,26 @@ export default function DiscoverPage() {
                   </option>
                 ))}
               </select>
-              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] pointer-events-none">
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
                 expand_more
               </span>
             </div>
 
             {/* Staj Dönemi Filtresi */}
             <div className="w-full md:w-52 relative group">
-              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] z-10">
+              <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-on-surface-variant z-10">
                 calendar_month
               </span>
               <select
                 value={selectedTerm}
                 onChange={(e) => setSelectedTerm(e.target.value)}
-                className="w-full h-12 pl-12 pr-4 bg-[#272a2c] text-[#e0e3e5] text-base rounded border border-[#45464c] appearance-none focus:outline-none focus:ring-1 focus:ring-[#c0c6db] shadow-sm transition-transform group-hover:scale-[1.01] cursor-pointer"
+                className="w-full h-12 pl-12 pr-4 bg-surface-container-lowest text-on-surface text-base rounded-lg border border-outline-variant/50 appearance-none focus:outline-none focus:ring-2 focus:ring-secondary/40 shadow-sm transition-transform group-hover:scale-[1.01] cursor-pointer"
               >
                 <option value="">Staj Dönemi (Tümü)</option>
                 <option value="LongTerm">Uzun Dönem</option>
                 <option value="ShortTerm">Kısa Dönem</option>
               </select>
-              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-[#c6c6cd] pointer-events-none">
+              <span className="material-symbols-outlined absolute right-4 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none">
                 expand_more
               </span>
             </div>
@@ -360,67 +361,61 @@ export default function DiscoverPage() {
             {visibleItems.map((item) => (
               <div
                 key={item.id}
-                className="group relative flex flex-col w-full min-h-[450px] bg-[#0d1118] text-[#e0e3e5] shadow-[0_18px_45px_rgba(0,0,0,0.2)] hover:shadow-[0_20px_55px_rgba(112,0,128,0.18)] transition-all duration-300 hover:-translate-y-1 border border-[#252c38] rounded-xl overflow-hidden"
+                className="group relative flex flex-col w-full min-h-[450px] bg-surface-container-lowest text-on-surface shadow-sm hover:shadow-md hover:border-secondary/40 transition-all duration-300 hover:-translate-y-1 border border-outline-variant/40 rounded-xl overflow-hidden"
               >
                 {/* Kart başlığı ve firma puanı */}
                 <div className="flex items-start justify-between gap-3 p-6 pb-5 relative z-10">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-14 h-14 bg-[#202631] rounded-xl flex items-center justify-center shadow-sm overflow-hidden shrink-0 border border-[#303847]">
-                      {item.companyLogo ? (
-                        <img className="w-10 h-10 object-contain" alt={item.companyName} src={item.companyLogo} />
-                      ) : (
-                        <span className="material-symbols-outlined text-[#45464c] text-[26px]">factory</span>
-                      )}
-                    </div>
+                    <CompanyLogo name={item.companyName} logoUrl={item.companyLogo} className="w-14 h-14 rounded-xl shadow-sm shrink-0 border border-outline-variant/50" textClassName="text-base" />
                     <div className="flex flex-col min-w-0 gap-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h3 className="font-['Newsreader'] text-xl font-bold text-[#e8eaf0] truncate">{item.companyName}</h3>
-                        <span className="rounded-full border border-[#72449b] bg-[#2a1740] px-2 py-1 font-['IBM_Plex_Mono'] text-[9px] font-bold text-[#c88cf1]">
+                        <h3 className="font-display text-xl font-bold text-primary truncate">{item.companyName}</h3>
+                        <span className="rounded-full border border-outline-variant/50 bg-surface-container-low px-2 py-1 font-label text-[9px] font-semibold text-secondary">
                           {formatTerm(item.term)}
                         </span>
                       </div>
-                      <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#8d96a8] uppercase tracking-wider">{item.sector}</span>
+                      <span className="font-label text-[10px] text-on-surface-variant tracking-wide">{item.sector}</span>
                     </div>
                   </div>
                   <div className="shrink-0 text-right">
-                    <div className="rounded-xl border border-[#624a08] bg-[#241d0b] px-3 py-2 font-['IBM_Plex_Mono'] text-sm font-bold text-[#f5b923]">
-                      <span className="text-[10px] uppercase">Firma Puanı</span> {item.rating !== null ? item.rating.toFixed(1) : '-'} <span className="text-xs">★</span>
+                    <div className="rounded-xl border border-outline-variant/50 bg-surface-container-low px-3 py-2 font-label text-sm font-bold text-primary">
+                      <span className="text-[10px]">Firma Puanı</span> {item.rating !== null ? item.rating.toFixed(1) : '-'} <span className="text-xs text-secondary">★</span>
                     </div>
-                    <div className="mt-1 font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">{item.reviewCount} Onaylı Yorum</div>
+                    <div className="mt-1 font-label text-[10px] text-on-surface-variant">{item.reviewCount} Onaylı Yorum</div>
                   </div>
                 </div>
 
                 {/* Metadata Şeridi */}
-                <div className={`mx-5 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 bg-[#151b25] border border-[#252c38] rounded-lg ${item.status === 'EMPTY' ? 'opacity-50' : ''}`}>
-                  <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#c7cbd5] flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-[14px] text-[#9955b2]">school</span>
+                <div className={`mx-5 flex flex-wrap items-center gap-x-3 gap-y-2 px-3 py-2.5 bg-surface-container-low border border-outline-variant/40 rounded-lg ${item.status === 'EMPTY' ? 'opacity-50' : ''}`}>
+                  <span className="font-label text-[10px] text-on-surface-variant flex items-center gap-1.5">
+                    <span className="material-symbols-outlined text-[14px] text-secondary">school</span>
                     {item.university}
                   </span>
-                  <span className="h-3 w-px bg-[#38404d]" />
-                  <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#c7cbd5]">{item.department || 'Bölüm belirtilmemiş'}</span>
-                  <span className="ml-auto font-['IBM_Plex_Mono'] text-[10px] text-[#8d96a8]">{item.location || 'İzmir'} · {formatTerm(item.term)}</span>
+                  <span className="h-3 w-px bg-outline-variant" />
+                  <span className="font-label text-[10px] text-on-surface-variant">{item.department || 'Bölüm belirtilmemiş'}</span>
+                  <span className="ml-auto font-label text-[10px] text-on-surface-variant">{item.location || 'İzmir'} · {formatTerm(item.term)}</span>
                 </div>
 
                 {/* Yorum Metni & Onay Durumu */}
                 <div className="p-6 pt-2 flex-1 flex flex-col">
-                  <p className={`border-l-2 border-[#8c3ba6] pl-4 text-sm leading-6 text-[#c9cbd3] mb-5 italic ${item.status === 'EMPTY' ? 'opacity-70' : 'line-clamp-3'}`}>
+                  <p className={`border-l-2 border-secondary pl-4 text-sm leading-6 text-on-surface mb-5 italic ${item.status === 'EMPTY' ? 'opacity-70' : 'line-clamp-3'}`}>
                     {item.status !== 'EMPTY' ? `"${item.reviewSnippet}"` : item.reviewSnippet}
                   </p>
                   {item.status !== 'EMPTY' && (
-                    <div className="mb-5 flex items-center gap-3 rounded-xl border border-[#252c38] bg-[#151b25] px-4 py-3">
-                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#3d310d] text-[#f5b923]">
+                    <div className="mb-5 flex items-center gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low px-4 py-3">
+                      <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary/15 text-secondary">
                         <span className="material-symbols-outlined text-[17px]">star</span>
                       </span>
-                      <span className="font-['IBM_Plex_Mono'] text-xs text-[#9ea8bb]">Stajyer Değerlendirmesi:</span>
-                      <strong className="font-['IBM_Plex_Mono'] text-lg text-[#f5b923]">{item.rating !== null ? item.rating.toFixed(1) : '-'} / 5.0</strong>
+                      <span className="font-label text-xs text-on-surface-variant">Stajyer Değerlendirmesi:</span>
+                      <strong className="font-label text-lg text-primary">{item.rating !== null ? item.rating.toFixed(1) : '-'} / 5.0</strong>
                     </div>
                   )}
-                  <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#252c38] pt-4">
-                    <span className="font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">DENEYİM KAYDI</span>
+                  <div className="mt-auto flex items-center justify-between gap-3 border-t border-outline-variant/40 pt-4">
+                    <span className="font-label text-[10px] text-on-surface-variant">DENEYİM KAYDI</span>
                     {item.status === 'EMPTY' && (
-                      <div className="flex items-center gap-1 text-[#c6c6cd]">
+                      <div className="flex items-center gap-1 text-on-surface-variant">
                         <span className="material-symbols-outlined text-[16px]">info</span>
-                        <span className="font-['IBM_Plex_Mono'] text-[10px] font-bold tracking-wide">
+                        <span className="font-label text-[10px] font-bold tracking-wide">
                           BİLGİ YOK
                         </span>
                       </div>
@@ -428,7 +423,7 @@ export default function DiscoverPage() {
                     <button
                       type="button"
                       onClick={() => navigate(`/internship/${item.id}`)}
-                      className="ml-auto inline-flex items-center gap-1 rounded-lg bg-[#9224dc] px-3 py-2 font-['IBM_Plex_Mono'] text-[10px] font-bold text-white shadow-[0_6px_18px_rgba(146,36,220,0.28)] transition-colors hover:bg-[#a93ff0]"
+                      className="ml-auto inline-flex items-center gap-1 rounded-lg bg-secondary px-3 py-2 font-label text-[10px] font-semibold text-on-secondary shadow-sm transition-colors hover:bg-primary-container"
                     >
                       Deneyim Detayı
                       <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
@@ -447,7 +442,7 @@ export default function DiscoverPage() {
                 aria-label="Önceki sayfa"
                 disabled={currentPage === 1}
                 onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                className="flex h-9 w-9 items-center justify-center rounded border border-[#45464c] text-[#c6c6cd] transition hover:border-[#9224dc] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant transition hover:border-secondary hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <span className="material-symbols-outlined text-[18px]">chevron_left</span>
               </button>
@@ -458,7 +453,7 @@ export default function DiscoverPage() {
                   aria-label={`${page}. sayfa`}
                   aria-current={currentPage === page ? 'page' : undefined}
                   onClick={() => setCurrentPage(page)}
-                  className={`flex h-9 min-w-9 items-center justify-center rounded border px-2 font-['IBM_Plex_Mono'] text-xs transition ${currentPage === page ? 'border-[#9224dc] bg-[#9224dc] text-white' : 'border-[#45464c] text-[#c6c6cd] hover:border-[#9224dc] hover:text-white'}`}
+                  className={`flex h-9 min-w-9 items-center justify-center rounded-lg border px-2 font-label text-xs transition ${currentPage === page ? 'border-secondary bg-secondary text-on-secondary' : 'border-outline-variant/50 text-on-surface-variant hover:border-secondary hover:text-secondary'}`}
                 >
                   {page}
                 </button>
@@ -468,7 +463,7 @@ export default function DiscoverPage() {
                 aria-label="Sonraki sayfa"
                 disabled={currentPage === totalPages}
                 onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
-                className="flex h-9 w-9 items-center justify-center rounded border border-[#45464c] text-[#c6c6cd] transition hover:border-[#9224dc] hover:text-white disabled:cursor-not-allowed disabled:opacity-30"
+                className="flex h-9 w-9 items-center justify-center rounded-lg border border-outline-variant/50 text-on-surface-variant transition hover:border-secondary hover:text-secondary disabled:cursor-not-allowed disabled:opacity-30"
               >
                 <span className="material-symbols-outlined text-[18px]">chevron_right</span>
               </button>

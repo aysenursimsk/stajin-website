@@ -7,4 +7,8 @@ export const adminService = {
   rejectInternship: (id: string, reason: string) => apiClient.put(`/admin/${id}/reject`, { reason }),
   approveChanges: (id: string) => apiClient.put(`/admin/${id}/approve-changes`),
   rejectChanges: (id: string, reason: string) => apiClient.put(`/admin/${id}/reject-changes`, { reason }),
+  getStats: () => apiClient.get('/admin/stats'),
+  getReportedComments: () => apiClient.get('/admin/reported-comments'),
+  deleteReportedComment: (commentId: string) => apiClient.delete(`/admin/comments/${commentId}`),
+  dismissReports: (commentId: string) => apiClient.put(`/admin/comments/${commentId}/dismiss-reports`),
 }

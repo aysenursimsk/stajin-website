@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useParams } from 'react-router-dom'
 import { companyService } from '../services/companyService'
 import { useAuth } from '../hooks/useAuth'
+import CompanyLogo from '../components/CompanyLogo'
 
 interface EvaluationItem {
   id: number | string
@@ -196,42 +197,40 @@ export default function CompanyProfilePage() {
   }
 
   return (
-    <main className="w-full pt-6 bg-[#101415] text-[#e0e3e5] min-h-screen font-['Inter']">
+    <main className="w-full pt-6 bg-background text-on-surface min-h-screen font-body">
       <div className="flex flex-col w-full">
         {/* Header Section */}
         <div className="flex flex-col relative w-full px-6 py-12 z-10 overflow-hidden">
           <div
             className="absolute inset-0 pointer-events-none opacity-20"
             style={{
-              backgroundImage: 'linear-gradient(to right, #45464c 1px, transparent 1px), linear-gradient(to bottom, #45464c 1px, transparent 1px)',
+              backgroundImage: 'linear-gradient(to right, #c4c6d1 1px, transparent 1px), linear-gradient(to bottom, #c4c6d1 1px, transparent 1px)',
               backgroundSize: '24px 24px'
             }}
           />
           <div className="flex flex-col lg:flex-row justify-between items-end gap-8 relative max-w-[1200px] mx-auto w-full">
             <div className="flex flex-col max-w-2xl">
               <div className="flex items-center gap-1 mb-4">
-                <span className="font-['IBM_Plex_Mono'] text-xs text-[#ffddb8] tracking-widest uppercase">Kayıt: TN-2023-089</span>
+                <span className="font-label text-xs text-secondary tracking-wide">Kayıt: TN-2023-089</span>
               </div>
-              <h1 className="font-['Newsreader'] text-4xl sm:text-5xl font-bold text-[#e0e3e5] mb-3">
+              <h1 className="font-display text-4xl sm:text-5xl font-bold text-primary mb-3 tracking-tight">
                 {companyName} Staj Değerlendirmeleri
               </h1>
-              <p className="text-lg text-[#c6c6cd]">
+              <p className="text-lg text-on-surface-variant">
                 Kurumsal AR-GE ve yazılım süreçleri hakkında doğrulanmış stajyer deneyimleri ve detaylı puanlama arşivi.
               </p>
             </div>
 
             {/* Şirket Puan Kartı */}
-            <div className="bg-[#272a2c] p-6 rounded-xl border border-[#45464c] flex items-center gap-6 shadow-lg min-w-[300px]">
-              <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center p-2 shrink-0">
-                <span className="material-symbols-outlined text-4xl text-[#101415]">domain</span>
-              </div>
+            <div className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/50 flex items-center gap-6 shadow-sm min-w-[300px]">
+              <CompanyLogo name={companyName} className="w-20 h-20 rounded-lg shrink-0" textClassName="text-2xl" />
               <div className="flex flex-col">
                 <div className="flex items-center gap-1 mb-1">
-                  <span className="text-4xl font-bold font-['Newsreader'] text-[#c0c6db]">8.5</span>
-                  <span className="text-[#c6c6cd] font-['IBM_Plex_Mono'] text-xs">/ 10</span>
+                  <span className="text-4xl font-bold font-display text-primary">8.5</span>
+                  <span className="text-on-surface-variant font-label text-xs">/ 10</span>
                 </div>
-                <div className="font-['Newsreader'] text-xl font-medium text-[#e0e3e5]">{companyName}</div>
-                <div className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd] uppercase tracking-widest">Yazılım &amp; Bilişim</div>
+                <div className="font-display text-xl font-medium text-primary">{companyName}</div>
+                <div className="text-xs font-label text-on-surface-variant tracking-wide">Yazılım &amp; Bilişim</div>
               </div>
             </div>
           </div>
@@ -244,28 +243,28 @@ export default function CompanyProfilePage() {
               <select
                 value={departmentFilter}
                 onChange={(e) => setDepartmentFilter(e.target.value)}
-                className="w-full h-11 pl-4 pr-10 bg-[#272a2c] text-[#e0e3e5] text-sm rounded-full border border-[#45464c] appearance-none focus:outline-none cursor-pointer"
+                className="w-full h-11 pl-4 pr-10 bg-surface-container-lowest text-on-surface text-sm rounded-full border border-outline-variant/50 appearance-none focus:outline-none focus:ring-2 focus:ring-secondary/40 cursor-pointer"
               >
                 <option value="">Tüm Bölümler</option>
                 <option value="ce">Bilgisayar Müh.</option>
                 <option value="ee">Elektrik Elektronik Müh.</option>
                 <option value="ie">Endüstri Müh.</option>
               </select>
-              <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#c6c6cd] pointer-events-none text-[18px]">expand_more</span>
+              <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
             </div>
 
             <div className="w-full md:w-48 relative">
               <select
                 value={cityFilter}
                 onChange={(e) => setCityFilter(e.target.value)}
-                className="w-full h-11 pl-4 pr-10 bg-[#272a2c] text-[#e0e3e5] text-sm rounded-full border border-[#45464c] appearance-none focus:outline-none cursor-pointer"
+                className="w-full h-11 pl-4 pr-10 bg-surface-container-lowest text-on-surface text-sm rounded-full border border-outline-variant/50 appearance-none focus:outline-none focus:ring-2 focus:ring-secondary/40 cursor-pointer"
               >
                 <option value="">Tüm İller</option>
                 <option value="istanbul">İstanbul</option>
                 <option value="ankara">Ankara</option>
                 <option value="izmir">İzmir</option>
               </select>
-              <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-[#c6c6cd] pointer-events-none text-[18px]">expand_more</span>
+              <span className="material-symbols-outlined absolute right-3.5 top-1/2 -translate-y-1/2 text-on-surface-variant pointer-events-none text-[18px]">expand_more</span>
             </div>
           </div>
         </div>
@@ -274,83 +273,83 @@ export default function CompanyProfilePage() {
         <div className="w-full px-6 py-8 relative z-10">
           <div className="max-w-[1200px] mx-auto w-full flex flex-col gap-6">
             {evaluations.map((item) => (
-              <div key={item.id} className="bg-[#272a2c] p-6 rounded-xl border border-[#45464c]/40 shadow-lg flex flex-col gap-4">
+              <div key={item.id} className="bg-surface-container-lowest p-6 rounded-xl border border-outline-variant/40 shadow-lg flex flex-col gap-4">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                   <div>
                     <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="font-['Newsreader'] text-xl font-medium text-[#e0e3e5]">
+                      <span className="font-display text-xl font-medium text-primary">
                         <a
                           href={normalizeLinkedInUrl(item.studentLinkedinUrl)}
                           target="_blank"
                           rel="noreferrer"
-                          className="hover:text-[#c0c6db] transition-colors underline decoration-[#45464c] underline-offset-4"
+                          className="hover:text-primary transition-colors underline decoration-outline-variant underline-offset-4"
                         >
                           {item.studentName} — {item.studentUniversity}
                         </a>
                       </span>
                       {item.isVerified && (
-                        <div className="flex items-center gap-1 px-2 py-0.5 bg-[#700080]/15 rounded-full border border-[#700080]/30">
-                          <span className="material-symbols-outlined text-[#fbaaff] text-[14px]">verified</span>
-                          <span className="text-[10px] font-bold text-[#fbaaff] uppercase tracking-widest">DOĞRULANMIŞ</span>
+                        <div className="flex items-center gap-1 px-2 py-0.5 bg-secondary/15 rounded-full border border-secondary/30">
+                          <span className="material-symbols-outlined text-secondary text-[14px]">verified</span>
+                          <span className="text-[10px] font-bold text-secondary uppercase tracking-widest">DOĞRULANMIŞ</span>
                         </div>
                       )}
                     </div>
-                    <div className="text-[#c6c6cd] font-['IBM_Plex_Mono'] text-xs">
+                    <div className="text-on-surface-variant font-label text-xs">
                       {item.internshipRole} • {item.internshipTerm} {item.cityName ? `• ${item.cityName}` : ''}
                     </div>
                   </div>
 
                   <div className="flex flex-col sm:items-end gap-1">
-                    <div className="flex gap-0.5 text-[#F59E0B]">
+                    <div className="flex gap-0.5 text-secondary">
                       {[...Array(5)].map((_, i) => (
                         <span key={i} className="material-symbols-outlined text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
                       ))}
                     </div>
-                    <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd]">Genel Puan: {item.overallRating}</span>
+                    <span className="text-xs font-label text-on-surface-variant">Genel Puan: {item.overallRating}</span>
                   </div>
                 </div>
 
                 {/* Form puanlari */}
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 py-4 border-y border-[#45464c]/20">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-4 py-4 border-y border-outline-variant/20">
                   <div className="flex flex-col">
-                    <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd] uppercase">Öğrenme</span>
-                    <span className="font-['Newsreader'] text-xl text-[#c0c6db]">{item.learningRating}/{item.maxRating}</span>
+                    <span className="text-xs font-label text-on-surface-variant uppercase">Öğrenme</span>
+                    <span className="font-display text-xl text-primary">{item.learningRating}/{item.maxRating}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd] uppercase">Mentorluk</span>
-                    <span className="font-['Newsreader'] text-xl text-[#c0c6db]">{item.mentorshipRating}/{item.maxRating}</span>
+                    <span className="text-xs font-label text-on-surface-variant uppercase">Mentorluk</span>
+                    <span className="font-display text-xl text-primary">{item.mentorshipRating}/{item.maxRating}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd] uppercase">Ortam</span>
-                    <span className="font-['Newsreader'] text-xl text-[#c0c6db]">{item.environmentRating}/{item.maxRating}</span>
+                    <span className="text-xs font-label text-on-surface-variant uppercase">Ortam</span>
+                    <span className="font-display text-xl text-primary">{item.environmentRating}/{item.maxRating}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd] uppercase">Teknik</span>
-                    <span className="font-['Newsreader'] text-xl text-[#c0c6db]">{item.techInfraRating || 0}/{item.maxRating}</span>
+                    <span className="text-xs font-label text-on-surface-variant uppercase">Teknik</span>
+                    <span className="font-display text-xl text-primary">{item.techInfraRating || 0}/{item.maxRating}</span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd] uppercase">Ücret</span>
-                    <span className="font-['Newsreader'] text-xl text-[#c0c6db]">{item.salaryRating || 0}/{item.maxRating}</span>
+                    <span className="text-xs font-label text-on-surface-variant uppercase">Ücret</span>
+                    <span className="font-display text-xl text-primary">{item.salaryRating || 0}/{item.maxRating}</span>
                   </div>
                 </div>
 
-                <p className="text-base text-[#c6c6cd] leading-relaxed italic">
+                <p className="text-base text-on-surface-variant leading-relaxed italic">
                   "{item.reviewText}"
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-[#c6c6cd]">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm text-on-surface-variant">
                   <div>
-                    <span className="font-semibold text-[#e0e3e5]">Tarih:</span> {item.startDate || '-'} - {item.endDate || '-'}
+                    <span className="font-semibold text-primary">Tarih:</span> {item.startDate || '-'} - {item.endDate || '-'}
                   </div>
                   <div>
-                    <span className="font-semibold text-[#e0e3e5]">İşe dönüş teklifi:</span> {item.returnOfferReceived ? 'Evet' : 'Hayır'}
+                    <span className="font-semibold text-primary">İşe dönüş teklifi:</span> {item.returnOfferReceived ? 'Evet' : 'Hayır'}
                   </div>
                   <div>
-                    <span className="font-semibold text-[#e0e3e5]">Tavsiye:</span> {item.additionalTips || 'Ek öneri bulunmuyor.'}
+                    <span className="font-semibold text-primary">Tavsiye:</span> {item.additionalTips || 'Ek öneri bulunmuyor.'}
                   </div>
                   {item.interview && (
                     <div className="md:col-span-2">
-                      <span className="font-semibold text-[#e0e3e5]">Mülakat:</span>{' '}
+                      <span className="font-semibold text-primary">Mülakat:</span>{' '}
                       {item.interview.applicationMethod || 'Belirtilmemiş'}
                       {item.interview.description ? ` - ${item.interview.description}` : ''}
                     </div>
@@ -360,20 +359,20 @@ export default function CompanyProfilePage() {
             ))}
 
             {/* Yorum Yap / Soru Sor Bölümü */}
-            <div className="mt-8 border-t border-[#45464c]/30 pt-8">
-              <h2 className="font-['Newsreader'] text-2xl font-semibold text-[#e0e3e5] mb-4">Yorum Yap / Soru Sor</h2>
+            <div className="mt-8 border-t border-outline-variant/30 pt-8">
+              <h2 className="font-display text-2xl font-semibold text-primary mb-4">Yorum Yap / Soru Sor</h2>
               
-              <form onSubmit={handleAddComment} className="bg-[#1d2022] p-6 rounded-xl border border-[#45464c]/30 mb-8 shadow-sm">
+              <form onSubmit={handleAddComment} className="bg-surface-container-low p-6 rounded-xl border border-outline-variant/30 mb-8 shadow-sm">
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
                   placeholder="Staj deneyimi hakkında bir soru sorun veya yorum yapın..."
-                  className="w-full bg-[#191c1e] text-[#e0e3e5] border border-[#45464c]/50 rounded-lg p-4 text-sm focus:outline-none focus:border-[#c0c6db] focus:ring-1 focus:ring-[#c0c6db] placeholder-[#c6c6cd]/50 min-h-[120px] resize-y"
+                  className="w-full bg-surface-container-lowest text-on-surface border border-outline-variant/50 rounded-lg p-4 text-sm focus:outline-none focus:border-secondary focus:ring-1 focus:ring-secondary placeholder-outline min-h-[120px] resize-y"
                 />
                 <div className="flex justify-end mt-4">
                   <button
                     type="submit"
-                    className="bg-[#c0c6db] text-[#050b1a] px-6 py-2 rounded-full font-['IBM_Plex_Mono'] text-sm font-semibold hover:bg-[#dce2f8] transition-colors shadow-sm"
+                    className="bg-secondary text-on-secondary px-6 py-2 rounded-full font-label text-sm font-semibold hover:bg-primary-container transition-colors shadow-sm"
                   >
                     Gönder
                   </button>
@@ -382,21 +381,21 @@ export default function CompanyProfilePage() {
 
               {/* Tartışmalar Listesi */}
               <div className="flex flex-col gap-4">
-                <h3 className="font-['Newsreader'] text-xl text-[#c6c6cd] mb-2">Tartışmalar</h3>
+                <h3 className="font-display text-xl text-on-surface-variant mb-2">Tartışmalar</h3>
                 {comments.map((c) => (
-                  <div key={c.id} className="bg-[#272a2c] p-5 rounded-xl border border-[#45464c]/20">
+                  <div key={c.id} className="bg-surface-container-lowest p-5 rounded-xl border border-outline-variant/20">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-[#7c158b] flex items-center justify-center text-[#f794ff] font-['IBM_Plex_Mono'] text-sm font-bold">
+                      <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center text-on-secondary font-label text-sm font-bold">
                         {c.commenterInitials}
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-['IBM_Plex_Mono'] text-sm font-semibold text-[#e0e3e5]">
+                        <span className="font-label text-sm font-semibold text-primary">
                           {c.commenterName}
                         </span>
-                        <span className="text-xs font-['IBM_Plex_Mono'] text-[#c6c6cd]/70">{c.commentDate}</span>
+                        <span className="text-xs font-label text-on-surface-variant/70">{c.commentDate}</span>
                       </div>
                     </div>
-                    <p className="text-sm text-[#c6c6cd]">{c.commentText}</p>
+                    <p className="text-sm text-on-surface-variant">{c.commentText}</p>
                   </div>
                 ))}
               </div>

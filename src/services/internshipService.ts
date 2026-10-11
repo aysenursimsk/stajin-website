@@ -15,6 +15,10 @@ export const internshipService = {
   remove: (id: string) => apiClient.delete(`/internship/${id}`),
   getComments: (id: string) => apiClient.get(`/internship/${id}/comments`),
   addComment: (id: string, content: string) => apiClient.post(`/internship/${id}/comments`, { content }),
+  addReply: (id: string, commentId: string, content: string) =>
+    apiClient.post(`/internship/${id}/comments/${commentId}/replies`, { content }),
+  reportComment: (id: string, commentId: string, reason: string, note?: string) =>
+    apiClient.post(`/internship/${id}/comments/${commentId}/report`, { reason, note }),
   getCommentReactions: (commentId: string) => apiClient.get(`/comment/${commentId}/reactions`),
   reactToComment: (commentId: string, isPositive: boolean) => apiClient.post(`/comment/${commentId}/reactions`, { isPositive }),
   uploadSGK: (id: string, file: File) => {

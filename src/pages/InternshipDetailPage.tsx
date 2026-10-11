@@ -4,6 +4,7 @@ import { internshipService } from '../services/internshipService'
 import { userService } from '../services/userService'
 import { useAuth } from '../hooks/useAuth'
 import apiClient from '../services/apiClient'
+import CompanyLogo from '../components/CompanyLogo'
 
 interface InternshipDetail {
   id: string | number
@@ -62,6 +63,21 @@ interface DetailComment {
   universityName?: string
   departmentName?: string
   isOwn?: boolean
+  parentCommentId?: string | number | null
+  hasReported?: boolean
+  isHidden?: boolean
+  replies?: DetailComment[]
+}
+
+interface MapCommentContext {
+  userId?: string
+  userFullName?: string
+  fallbackLinkedIn?: string
+  fallbackPicture?: string
+  profileUniversity?: string
+  profileDepartment?: string
+  detailUniversity?: string
+  detailDepartment?: string
 }
 
 interface CommentReaction {
@@ -152,6 +168,62 @@ function getAdviceText(additionalTips?: string) {
   return additionalTips?.match(/Ek (?:öneri|tavsiye):\s*([\s\S]*)/i)?.[1]?.trim() || ''
 }
 
+const REPORT_REASONS = [
+  { value: 'Profanity', label: 'Küfür / Hakaret' },
+  { value: 'Spam', label: 'Spam' },
+  { value: 'Harassment', label: 'Taciz' },
+  { value: 'Misinformation', label: 'Yanlış bilgi' },
+  { value: 'Other', label: 'Diğer' },
+]
+
+// Backend yorum nesnesini DetailComment'e çevirir; cevapları (replies) tek seviye nested map'ler
+function mapComment(item: any, ctx: MapCommentContext): DetailComment {
+  const name = item.userName || item.commenterName || item.authorName || item.user?.fullName || item.author?.fullName || 'Anonim Öğrenci'
+  const isOwn = item.userId === ctx.userId || item.authorName === ctx.userFullName || item.user?.id === ctx.userId
+  const replies = Array.isArray(item.replies) ? item.replies.map((reply: any) => mapComment(reply, ctx)) : []
+  return {
+    id: item.id,
+    userId: item.userId || item.user?.id || item.author?.id,
+    name,
+    initials: name.split(' ').map((part: string) => part[0]).join('').slice(0, 2).toLocaleUpperCase('tr-TR') || 'AÖ',
+    text: item.content || item.commentText || '',
+    date: item.createdAt ? formatDate(item.createdAt) : '-',
+    linkedInProfileUrl:
+      item.linkedInProfileUrl ||
+      item.linkedinProfileUrl ||
+      item.linkedInUrl ||
+      item.authorLinkedInProfileUrl ||
+      item.author?.linkedInProfileUrl ||
+      item.user?.linkedInProfileUrl ||
+      item.user?.linkedinUrl ||
+      ctx.fallbackLinkedIn,
+    profilePictureUrl:
+      item.profilePictureUrl ||
+      item.authorProfilePictureUrl ||
+      item.author?.profilePictureUrl ||
+      item.user?.profilePictureUrl ||
+      (isOwn && ctx.fallbackPicture) ||
+      '',
+    universityName: (isOwn && ctx.profileUniversity) || item.universityName || item.user?.universityName || ctx.detailUniversity,
+    departmentName: (isOwn && ctx.profileDepartment) || item.departmentName || item.user?.departmentName || ctx.detailDepartment,
+    isOwn,
+    parentCommentId: item.parentCommentId ?? null,
+    hasReported: !!item.hasReported,
+    isHidden: !!item.isHidden,
+    replies,
+  }
+}
+
+// Yorum + tüm cevaplarının id'lerini düz liste olarak verir (reaksiyonları toplu çekmek için)
+function flattenCommentIds(comments: DetailComment[]): string[] {
+  const ids: string[] = []
+  comments.forEach((comment) => {
+    ids.push(String(comment.id))
+    ;(comment.replies || []).forEach((reply) => ids.push(String(reply.id)))
+  })
+  return ids
+}
+
 export default function InternshipDetailPage() {
   const { id } = useParams<{ id: string }>()
   const { user } = useAuth()
@@ -164,6 +236,11 @@ export default function InternshipDetailPage() {
   const [reactingCommentId, setReactingCommentId] = useState<string | null>(null)
   const [editingCommentId, setEditingCommentId] = useState<string | null>(null)
   const [editingCommentText, setEditingCommentText] = useState('')
+  const [replyingToId, setReplyingToId] = useState<string | null>(null)
+  const [replyText, setReplyText] = useState('')
+  const [reportingCommentId, setReportingCommentId] = useState<string | null>(null)
+  const [reportReason, setReportReason] = useState('Spam')
+  const [reportNote, setReportNote] = useState('')
   const [commentError, setCommentError] = useState('')
   const [reactionError, setReactionError] = useState('')
   const [deletingCommentId, setDeletingCommentId] = useState<string | null>(null)
@@ -260,43 +337,26 @@ export default function InternshipDetailPage() {
               ? commentsResult.value.data.data
               : commentsResult.value.data?.items || []
           console.log('commentItems:', commentItems)
-          const mappedComments = commentItems.map((item: any) => {
-            const name = item.userName || item.commenterName || item.authorName || item.user?.fullName || item.author?.fullName || 'Anonim Öğrenci'
-            const isOwn = item.userId === user?.id || item.authorName === user?.fullName || item.user?.id === user?.id
-            return {
-              id: item.id,
-              userId: item.userId || item.user?.id || item.author?.id,
-              name,
-              initials: name.split(' ').map((part: string) => part[0]).join('').slice(0, 2).toUpperCase() || 'AÖ',
-              text: item.content || item.commentText || '',
-              date: item.createdAt ? formatDate(item.createdAt) : '-',
-              linkedInProfileUrl: item.linkedInProfileUrl
-                || item.linkedinProfileUrl
-                || item.linkedInUrl
-                || item.authorLinkedInProfileUrl
-                || item.author?.linkedInProfileUrl
-                || item.user?.linkedInProfileUrl
-                || item.user?.linkedinUrl
-                || currentLinkedInProfileUrl,
-              profilePictureUrl: item.profilePictureUrl
-                || item.authorProfilePictureUrl
-                || item.author?.profilePictureUrl
-                || item.user?.profilePictureUrl
-                || (isOwn && currentProfilePicture)
-                || '',
-              universityName: (isOwn && profile?.universityName) || item.universityName || item.user?.universityName || detailData.universityName,
-              departmentName: (isOwn && profile?.departmentName) || item.departmentName || item.user?.departmentName || detailData.departmentName,
-              isOwn,
-            }
-          })
+          const mapCtx: MapCommentContext = {
+            userId: user?.id,
+            userFullName: user?.fullName,
+            fallbackLinkedIn: currentLinkedInProfileUrl,
+            fallbackPicture: currentProfilePicture,
+            profileUniversity: profile?.universityName,
+            profileDepartment: profile?.departmentName,
+            detailUniversity: detailData.universityName,
+            detailDepartment: detailData.departmentName,
+          }
+          const mappedComments = commentItems.map((item: any) => mapComment(item, mapCtx))
           setComments(mappedComments.reverse())
+          const reactionIds = flattenCommentIds(mappedComments)
           const reactionResults = await Promise.allSettled(
-            mappedComments.map((item) => internshipService.getCommentReactions(String(item.id)))
+            reactionIds.map((commentId) => internshipService.getCommentReactions(commentId))
           )
           const reactionMap: Record<string, CommentReaction> = {}
           reactionResults.forEach((result, index) => {
             if (result.status === 'fulfilled') {
-              reactionMap[String(mappedComments[index].id)] = readCommentReactions(result.value.data)
+              reactionMap[reactionIds[index]] = readCommentReactions(result.value.data)
             }
           })
           setCommentReactions(reactionMap)
@@ -322,10 +382,73 @@ export default function InternshipDetailPage() {
       const meta = document.createElement('p')
       meta.dataset.commentMeta = 'true'
       meta.textContent = `${comment.departmentName || 'Bölüm belirtilmemiş'} | ${comment.universityName || 'Üniversite belirtilmemiş'}`
-      meta.className = 'text-[10px] text-[#8d96a8]'
+      meta.className = 'text-[10px] text-on-surface-variant'
       container.appendChild(meta)
     })
   }, [comments])
+
+  const refreshComments = async () => {
+    const commentsResponse = await internshipService.getComments(id || '').catch(() => ({ data: null }))
+    const commentItems = Array.isArray(commentsResponse.data)
+      ? commentsResponse.data
+      : Array.isArray(commentsResponse.data?.data)
+        ? commentsResponse.data.data
+        : commentsResponse.data?.items || []
+    const mapCtx: MapCommentContext = {
+      userId: user?.id,
+      userFullName: user?.fullName,
+      fallbackLinkedIn: currentLinkedInProfileUrl,
+      fallbackPicture: currentProfilePicture,
+      profileUniversity: currentProfile?.universityName,
+      profileDepartment: currentProfile?.departmentName,
+      detailUniversity: detail?.universityName,
+      detailDepartment: detail?.departmentName,
+    }
+    const mappedComments = commentItems.map((item: any) => mapComment(item, mapCtx))
+    setComments(mappedComments.reverse())
+    const reactionIds = flattenCommentIds(mappedComments)
+    const reactionResults = await Promise.allSettled(
+      reactionIds.map((commentId) => internshipService.getCommentReactions(commentId))
+    )
+    const reactionMap: Record<string, CommentReaction> = {}
+    reactionResults.forEach((result, index) => {
+      if (result.status === 'fulfilled') reactionMap[reactionIds[index]] = readCommentReactions(result.value.data)
+    })
+    setCommentReactions(reactionMap)
+  }
+
+  const handleAddReply = async (parentCommentId: string) => {
+    const text = replyText.trim()
+    if (!text) return
+    try {
+      await internshipService.addReply(id || '', parentCommentId, text)
+      setReplyText('')
+      setReplyingToId(null)
+      setCommentError('')
+      await refreshComments()
+    } catch (error: any) {
+      console.warn('Cevap gönderilemedi:', error)
+      const status = error?.response?.status
+      if (status === 429 || status === 409) setCommentError('')
+      else setCommentError('Cevap gönderilemedi. Giriş yaptığınızdan ve hesabınızın doğrulandığından emin olun.')
+    }
+  }
+
+  const handleReport = async (commentId: string) => {
+    try {
+      await internshipService.reportComment(id || '', commentId, reportReason, reportNote.trim())
+      setReportingCommentId(null)
+      setReportReason('Spam')
+      setReportNote('')
+      setCommentError('')
+      await refreshComments()
+    } catch (error) {
+      console.warn('Şikayet gönderilemedi:', error)
+      const apiError = error as any
+      const message = apiError.response?.data?.message || apiError.response?.data?.title
+      setCommentError(typeof message === 'string' ? message : 'Şikayet gönderilemedi.')
+    }
+  }
 
   const handleComment = async (event: FormEvent) => {
     event.preventDefault()
@@ -370,33 +493,12 @@ export default function InternshipDetailPage() {
         }
       }
       await fetchDetail()
-      const commentsResponse = await internshipService.getComments(id || '').catch(() => ({ data: null }))
-      const commentItems = Array.isArray(commentsResponse.data)
-        ? commentsResponse.data
-        : Array.isArray(commentsResponse.data?.data)
-          ? commentsResponse.data.data
-          : commentsResponse.data?.items || []
-      const mappedComments = commentItems.map((item: any) => {
-        const name = item.userName || item.commenterName || item.authorName || item.user?.fullName || 'Anonim Öğrenci'
-        const isOwn = item.userId === user?.id || item.authorName === user?.fullName || item.user?.id === user?.id
-        return {
-          id: item.id,
-          userId: item.userId || item.user?.id,
-          name,
-          initials: name.split(' ').map((p: string) => p[0]).join('').slice(0, 2).toUpperCase() || 'AÖ',
-          text: item.content || item.commentText || '',
-          date: item.createdAt ? formatDate(item.createdAt) : '-',
-          linkedInProfileUrl: item.linkedInProfileUrl || item.authorLinkedInProfileUrl || item.user?.linkedInProfileUrl || currentLinkedInProfileUrl || '',
-          profilePictureUrl: item.profilePictureUrl || item.authorProfilePictureUrl || item.user?.profilePictureUrl || (isOwn && currentProfilePicture) || '',
-          universityName: (isOwn && currentProfile?.universityName) || item.universityName || item.user?.universityName || detail?.universityName,
-          departmentName: (isOwn && currentProfile?.departmentName) || item.departmentName || item.user?.departmentName || detail?.departmentName,
-          isOwn,
-        }
-      })
-      setComments(mappedComments.reverse())
-    } catch (error) {
+      await refreshComments()
+    } catch (error: any) {
       console.warn('Yorum gönderilemedi:', error)
-      setCommentError('Yorum gönderilemedi. Giriş yaptığınızdan ve hesabınızın doğrulandığından emin olun.')
+      const status = error?.response?.status
+      if (status === 429 || status === 409) setCommentError('')
+      else setCommentError('Yorum gönderilemedi. Giriş yaptığınızdan ve hesabınızın doğrulandığından emin olun.')
     }
   }
 
@@ -435,7 +537,7 @@ export default function InternshipDetailPage() {
     setDeletingCommentId(String(commentId))
     try {
       await apiClient.delete(`/internship/${id}/comments/${commentId}`)
-      setComments((current) => current.filter((c) => c.id !== commentId))
+      await refreshComments()
     } catch (error) {
       console.warn('Yorum silinemedi:', error)
       setCommentError('Yorum silinemedi.')
@@ -449,13 +551,9 @@ export default function InternshipDetailPage() {
     setDeletingCommentId(String(commentId))
     try {
       await apiClient.put(`/internship/${id}/comments/${commentId}`, { content: editingCommentText })
-      setComments((current) =>
-        current.map((c) =>
-          c.id === commentId ? { ...c, text: editingCommentText } : c
-        )
-      )
       setEditingCommentId(null)
       setEditingCommentText('')
+      await refreshComments()
     } catch (error) {
       console.warn('Yorum güncellenemedi:', error)
       setCommentError('Yorum güncellenemedi.')
@@ -465,11 +563,11 @@ export default function InternshipDetailPage() {
   }
 
   if (loading) {
-    return <main className="min-h-screen bg-[#101415] p-8 text-center text-[#c6c6cd]">Detay yükleniyor...</main>
+    return <main className="min-h-screen bg-background p-8 text-center text-on-surface-variant">Detay yükleniyor...</main>
   }
 
   if (!detail) {
-    return <main className="min-h-screen bg-[#101415] p-8 text-center text-[#c6c6cd]">Bu staj değerlendirmesi bulunamadı.</main>
+    return <main className="min-h-screen bg-background p-8 text-center text-on-surface-variant">Bu staj değerlendirmesi bulunamadı.</main>
   }
 
   const scores = detail.scores || {}
@@ -486,16 +584,105 @@ export default function InternshipDetailPage() {
   const experienceText = getExperienceText(detail.description || detail.additionalNotes, scores.additionalTips)
   const adviceText = getAdviceText(scores.additionalTips)
 
+  const renderComment = (item: DetailComment, isReply = false) => {
+    const reaction = commentReactions[String(item.id)] || { positiveCount: 0, negativeCount: 0 }
+    const commentUrl = normalizeLinkedInUrl(item.linkedInProfileUrl)
+    const profileHref = commentUrl || '#'
+    const isPreviewOpen = activeProfilePreview === String(item.id)
+    const canManage = user?.id === item.userId || item.isOwn
+    return (
+      <article className="rounded-lg border border-outline-variant/40 bg-surface-container-low p-4">
+        <div className="mb-3 flex items-start justify-between">
+          <div className="flex items-center gap-2 flex-1">
+            <div className="shrink-0">
+              {item.profilePictureUrl ? (
+                <img className="h-8 w-8 rounded-full object-cover border border-outline-variant/50" src={item.profilePictureUrl} alt={item.name} />
+              ) : (
+                <span className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary/15 font-label text-[11px] font-semibold text-secondary border border-outline-variant/40">{item.initials}</span>
+              )}
+            </div>
+            <div className="relative flex-1 min-w-0">
+              <a href={profileHref} target={commentUrl ? '_blank' : undefined} rel={commentUrl ? 'noreferrer' : undefined} onClick={(event) => { if (!commentUrl) { event.preventDefault(); setActiveProfilePreview(isPreviewOpen ? null : String(item.id)) } }} className="text-sm font-semibold text-secondary underline decoration-secondary/40 underline-offset-2 hover:text-primary">{item.name}</a>
+              <div className={`absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-3 shadow-[0_12px_30px_rgba(0,0,0,0.4)] transition-all duration-200 ${isPreviewOpen ? 'block opacity-100' : 'hidden opacity-0'}`}>
+                <div className="flex items-center gap-2">
+                  {item.profilePictureUrl ? <img className="h-9 w-9 rounded-full object-cover" src={item.profilePictureUrl} alt="" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary/15 text-xs text-secondary">{item.initials}</span>}
+                  <div className="min-w-0"><p className="truncate text-xs font-semibold text-primary">{item.name}</p><p className="text-[10px] text-on-surface-variant">Staj yorumu</p></div>
+                </div>
+                {commentUrl && <a href={commentUrl} target="_blank" rel="noreferrer" className="mt-3 block rounded-lg bg-secondary px-3 py-2 text-center font-label text-[10px] font-bold text-white hover:bg-primary-container">Profile Git</a>}
+              </div>
+              <span className="mt-1 flex items-center gap-2 text-xs text-on-surface-variant">
+                {item.date}
+                {item.isHidden && (
+                  <span className="inline-flex items-center gap-1 rounded-full border border-amber-400/50 bg-amber-100 px-2 py-0.5 text-[10px] font-semibold text-amber-700">
+                    <span className="material-symbols-outlined text-[12px]">visibility_off</span>İncelemede
+                  </span>
+                )}
+              </span>
+            </div>
+          </div>
+          {canManage && editingCommentId !== item.id && (
+            <div className="flex gap-1">
+              <button type="button" onClick={() => { setEditingCommentId(String(item.id)); setEditingCommentText(item.text) }} className="rounded-lg border border-emerald-500/40 px-2.5 py-1.5 text-xs text-emerald-600 hover:bg-emerald-50 transition" title="Düzenle"><span className="material-symbols-outlined text-[15px]">edit</span></button>
+              <button type="button" disabled={deletingCommentId === String(item.id)} onClick={() => handleDeleteComment(String(item.id))} className="rounded-lg border border-rose-500/40 px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 transition disabled:opacity-50" title="Sil"><span className="material-symbols-outlined text-[15px]">delete</span></button>
+            </div>
+          )}
+        </div>
+        {editingCommentId === String(item.id) && canManage ? (
+          <div className="mt-3 flex gap-2">
+            <input type="text" value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} placeholder="Yorumunuzu düzenleyin..." className="flex-1 rounded-lg border border-outline-variant/50 bg-surface-container-low px-3 py-2 text-sm text-on-surface outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
+            <button type="button" onClick={() => handleUpdateComment(String(item.id))} className="rounded-lg bg-emerald-600 px-3 py-2 font-label text-xs font-bold text-white hover:bg-emerald-700 transition">Kaydet</button>
+            <button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }} className="rounded-lg border border-outline-variant/50 px-3 py-2 font-label text-xs text-on-surface-variant hover:bg-surface-container-high transition">İptal</button>
+          </div>
+        ) : (
+          <p className="text-sm leading-6 text-on-surface-variant">{item.text}</p>
+        )}
+        <div className="mt-3 flex items-center gap-2">
+          <button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), true)} className="inline-flex items-center gap-1 rounded-lg border border-emerald-500/40 px-2.5 py-1.5 text-xs text-emerald-600 hover:bg-emerald-50 disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_up</span>{reaction.positiveCount}</button>
+          <button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), false)} className="inline-flex items-center gap-1 rounded-lg border border-rose-500/40 px-2.5 py-1.5 text-xs text-rose-600 hover:bg-rose-50 disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_down</span>{reaction.negativeCount}</button>
+          {!isReply && (
+            <button type="button" onClick={() => { setReplyingToId(replyingToId === String(item.id) ? null : String(item.id)); setReplyText('') }} className="inline-flex items-center gap-1 rounded-lg border border-outline-variant/50 px-2.5 py-1.5 text-xs text-on-surface-variant hover:border-secondary hover:text-secondary"><span className="material-symbols-outlined text-[15px]">reply</span>Yanıtla</button>
+          )}
+          {!canManage && (item.hasReported ? (
+            <span className="inline-flex items-center gap-1 rounded-lg border border-outline-variant/40 px-2.5 py-1.5 text-xs text-on-surface-variant opacity-60"><span className="material-symbols-outlined text-[15px]">flag</span>Şikayet edildi</span>
+          ) : (
+            <button type="button" onClick={() => { setReportingCommentId(reportingCommentId === String(item.id) ? null : String(item.id)); setReportReason('Spam'); setReportNote('') }} className="inline-flex items-center gap-1 rounded-lg border border-outline-variant/50 px-2.5 py-1.5 text-xs text-on-surface-variant hover:border-rose-400 hover:text-rose-600"><span className="material-symbols-outlined text-[15px]">flag</span>Şikayet et</button>
+          ))}
+        </div>
+        {!isReply && replyingToId === String(item.id) && (
+          <div className="mt-3 flex gap-2">
+            <input type="text" value={replyText} onChange={(e) => setReplyText(e.target.value)} placeholder="Yanıtınızı yazın..." className="flex-1 rounded-lg border border-outline-variant/50 bg-surface-container-low px-3 py-2 text-sm text-on-surface outline-none focus:border-secondary focus:ring-1 focus:ring-secondary" />
+            <button type="button" onClick={() => handleAddReply(String(item.id))} className="rounded-lg bg-secondary px-3 py-2 font-label text-xs font-bold text-white hover:bg-primary-container transition">Gönder</button>
+            <button type="button" onClick={() => { setReplyingToId(null); setReplyText('') }} className="rounded-lg border border-outline-variant/50 px-3 py-2 font-label text-xs text-on-surface-variant hover:bg-surface-container-high transition">İptal</button>
+          </div>
+        )}
+        {!canManage && reportingCommentId === String(item.id) && (
+          <div className="mt-3 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-3">
+            <div className="mb-2 flex flex-wrap gap-2">
+              {REPORT_REASONS.map((r) => (
+                <button key={r.value} type="button" onClick={() => setReportReason(r.value)} className={`rounded-full border px-3 py-1 text-xs transition ${reportReason === r.value ? 'border-secondary bg-secondary text-white' : 'border-outline-variant/50 text-on-surface-variant hover:border-secondary'}`}>{r.label}</button>
+              ))}
+            </div>
+            <textarea value={reportNote} onChange={(e) => setReportNote(e.target.value)} maxLength={300} rows={2} placeholder="Not (opsiyonel, en fazla 300 karakter)" className="w-full resize-y rounded-lg border border-outline-variant/50 bg-surface-container-low px-3 py-2 text-sm text-on-surface outline-none focus:border-secondary" />
+            <div className="mt-2 flex items-center justify-end gap-2">
+              <button type="button" onClick={() => { setReportingCommentId(null); setReportNote('') }} className="rounded-lg border border-outline-variant/50 px-3 py-1.5 font-label text-xs text-on-surface-variant hover:bg-surface-container-high">İptal</button>
+              <button type="button" onClick={() => handleReport(String(item.id))} className="rounded-lg bg-rose-600 px-3 py-1.5 font-label text-xs font-bold text-white hover:bg-rose-700">Şikayet et</button>
+            </div>
+          </div>
+        )}
+      </article>
+    )
+  }
+
   return (
-    <main className="min-h-screen bg-[#101415] px-4 py-8 text-[#e0e3e5] font-['Inter']">
+    <main className="min-h-screen bg-background px-4 py-8 text-on-surface font-body">
       {needsAuth && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-[#1d2022] border-l-4 border-[#700080] rounded-lg p-8 max-w-md text-center">
-            <h2 className="text-2xl font-bold text-white mb-4">Giriş Yapmanız Gerekiyor</h2>
-            <p className="text-[#c6c6cd] mb-6">Tüm detayları görmek için lütfen giriş yapınız.</p>
+          <div className="bg-surface-container-lowest border-l-4 border-secondary rounded-lg p-8 max-w-md text-center">
+            <h2 className="text-2xl font-bold text-primary mb-4">Giriş Yapmanız Gerekiyor</h2>
+            <p className="text-on-surface-variant mb-6">Tüm detayları görmek için lütfen giriş yapınız.</p>
             <Link
               to="/"
-              className="inline-block px-8 py-3 bg-[#700080] hover:bg-[#9224dc] text-white rounded-lg transition-colors font-bold"
+              className="inline-block px-8 py-3 bg-secondary hover:bg-primary-container text-white rounded-lg transition-colors font-bold"
             >
               Ana Sayfaya Dön
             </Link>
@@ -503,98 +690,128 @@ export default function InternshipDetailPage() {
         </div>
       )}
       <div className="mx-auto max-w-[1060px]">
-        <button type="button" onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-2 font-['IBM_Plex_Mono'] text-xs text-[#a982b4] hover:text-white">
+        <button type="button" onClick={() => navigate(-1)} className="mb-6 inline-flex items-center gap-2 font-label text-xs text-secondary hover:text-primary">
           <span className="material-symbols-outlined text-[16px]">arrow_back</span>
           Staj Arşivine Dön
         </button>
 
-        <section className="rounded-xl border border-[#252c38] bg-[#0d1118] p-6 shadow-[0_18px_45px_rgba(0,0,0,0.22)] md:p-9">
-          <div className="flex flex-col justify-between gap-6 border-b border-[#252c38] pb-7 md:flex-row md:items-start">
+        <section className="rounded-xl border border-outline-variant/40 bg-surface-container-lowest p-6 shadow-[0_18px_45px_rgba(0,0,0,0.22)] md:p-9">
+          <div className="flex flex-col justify-between gap-6 border-b border-outline-variant/40 pb-7 md:flex-row md:items-start">
             <div className="flex items-center gap-4">
-              <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#303847] bg-[#202631]">
-                {detail.companyLogo ? <img className="h-11 w-11 object-contain" src={detail.companyLogo} alt={detail.companyName} /> : <span className="material-symbols-outlined text-[30px] text-[#657084]">factory</span>}
-              </div>
+              <CompanyLogo name={detail.companyName} logoUrl={detail.companyLogo} className="h-16 w-16 shrink-0 rounded-xl border border-outline-variant/50" textClassName="text-xl" />
               <div>
                 <div className="mb-1 flex flex-wrap items-center gap-2">
-                  <h1 className="font-['Newsreader'] text-3xl font-bold text-[#f2f3f6]">{detail.companyName}</h1>
-                  <span className="rounded-full border border-[#72449b] bg-[#2a1740] px-2 py-1 font-['IBM_Plex_Mono'] text-[9px] font-bold text-[#c88cf1]">{formatTerm(detail.term)}</span>
+                  <h1 className="font-display text-3xl font-bold text-primary">{detail.companyName}</h1>
+                  <span className="rounded-full border border-secondary/40 bg-secondary/15 px-2 py-1 font-label text-[9px] font-bold text-secondary">{formatTerm(detail.term)}</span>
                 </div>
-                <p className="font-['IBM_Plex_Mono'] text-xs uppercase tracking-wider text-[#8d96a8]">{formatValue(detail.companyDepartment)}</p>
-                <div className="mt-2 flex items-center gap-1.5 text-sm text-[#c6c6cd]">
-                  {detail.profilePictureUrl ? <img className="h-5 w-5 rounded-full object-cover" src={detail.profilePictureUrl} alt="" /> : <span className="material-symbols-outlined text-[16px] text-[#9955b2]">person</span>}
+                <p className="font-label text-xs uppercase tracking-wider text-on-surface-variant">{formatValue(detail.companyDepartment)}</p>
+                <div className="mt-2 flex items-center gap-1.5 text-sm text-on-surface-variant">
+                  {detail.profilePictureUrl ? <img className="h-5 w-5 rounded-full object-cover" src={detail.profilePictureUrl} alt="" /> : <span className="material-symbols-outlined text-[16px] text-secondary">person</span>}
                   <span>Stajyer:</span>
                   {detail.authorName && detail.authorName !== 'Anonim Öğrenci' && normalizeLinkedInUrl(detail.authorLinkedInProfileUrl) ? (
                     <a
                       href={normalizeLinkedInUrl(detail.authorLinkedInProfileUrl)}
                       target="_blank"
                       rel="noreferrer"
-                      className="font-semibold text-[#c88cf1] underline decoration-[#72449b] underline-offset-2 hover:text-white"
+                      className="font-semibold text-secondary underline decoration-secondary/40 underline-offset-2 hover:text-primary"
                     >
                       {detail.authorName}
                     </a>
                   ) : (
-                    <span className="font-semibold text-white">{detail.authorName || 'Anonim Öğrenci'}</span>
+                    <span className="font-semibold text-primary">{detail.authorName || 'Anonim Öğrenci'}</span>
                   )}
                 </div>
               </div>
             </div>
             <div className="flex flex-wrap gap-2 text-left md:justify-end md:text-right">
-              <div className="rounded-xl border border-[#624a08] bg-[#241d0b] px-4 py-3 font-['IBM_Plex_Mono'] text-[#f5b923]">
-                <div className="text-[9px] uppercase text-[#c59d3a]">Firma Puanı</div>
-                <strong>{companyAverage !== null ? companyAverage.toFixed(1) : '-'} / 5.0 ★</strong>
+              <div className="rounded-xl border border-amber-300 bg-amber-100 px-4 py-3 font-label">
+                <div className="text-[9px] uppercase text-on-surface-variant">Firma Puanı</div>
+                <strong className="text-on-surface">{companyAverage !== null ? companyAverage.toFixed(1) : '-'} / 5.0 <span className="text-amber-400">★</span></strong>
               </div>
-              <div className="rounded-xl border border-[#624a08] bg-[#241d0b] px-4 py-3 font-['IBM_Plex_Mono'] text-[#f5b923]">
-                <div className="text-[9px] uppercase text-[#c59d3a]">Stajyer Puanı</div>
-                <strong>{internAverage !== null ? internAverage.toFixed(1) : '-'} / 5.0 ★</strong>
+              <div className="rounded-xl border border-amber-300 bg-amber-100 px-4 py-3 font-label">
+                <div className="text-[9px] uppercase text-on-surface-variant">Stajyer Puanı</div>
+                <strong className="text-on-surface">{internAverage !== null ? internAverage.toFixed(1) : '-'} / 5.0 <span className="text-amber-400">★</span></strong>
               </div>
-              <p className="mt-2 font-['IBM_Plex_Mono'] text-[10px] text-[#657084]">DENEYİM KAYDI</p>
+              <p className="mt-2 font-label text-[10px] text-on-surface-variant">DENEYİM KAYDI</p>
             </div>
           </div>
 
-          <div className="my-7 grid gap-3 rounded-xl border border-[#252c38] bg-[#151b25] p-4 text-xs text-[#c7cbd5] md:grid-cols-4">
-            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-[#9955b2]">school</span>{formatValue(detail.universityName)}</div>
-            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-[#9955b2]">category</span>{formatValue(detail.departmentName)}</div>
-            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-[#9955b2]">location_on</span>{formatValue(detail.cityName)}</div>
-            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-[#9955b2]">calendar_month</span>{formatDate(detail.startDate)} - {formatDate(detail.endDate)}</div>
+          <div className="my-7 grid gap-3 rounded-xl border border-outline-variant/40 bg-surface-container-low p-4 text-xs text-on-surface-variant md:grid-cols-4">
+            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-secondary">school</span>{formatValue(detail.universityName)}</div>
+            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-secondary">category</span>{formatValue(detail.departmentName)}</div>
+            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-secondary">location_on</span>{formatValue(detail.cityName)}</div>
+            <div><span className="material-symbols-outlined mr-1 align-middle text-[15px] text-secondary">calendar_month</span>{formatDate(detail.startDate)} - {formatDate(detail.endDate)}</div>
           </div>
 
-          <blockquote className="mb-8 border-l-2 border-[#8c3ba6] pl-5 text-base italic leading-7 text-[#c9cbd3]">
+          <blockquote className="mb-8 border-l-2 border-secondary pl-5 text-base italic leading-7 text-on-surface">
             {formatValue(experienceText)}
           </blockquote>
 
           <div className="mb-8 grid gap-4 md:grid-cols-2">
-            <section className="rounded-xl border border-[#252c38] bg-[#151b25] p-5">
-              <h2 className="mb-4 font-['Newsreader'] text-xl font-bold text-white">Değerlendirme Detayları</h2>
+            <section className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-5">
+              <h2 className="mb-4 font-display text-xl font-bold text-primary">Değerlendirme Detayları</h2>
               <div className="space-y-3">
                 {scoreEntries.map(([label, value]) => (
-                  <div key={label} className="flex items-center justify-between gap-3 border-b border-[#252c38] pb-2 last:border-0 last:pb-0">
-                    <span className="text-sm text-[#9ea8bb]">{label}</span>
-                    <strong className="font-['IBM_Plex_Mono'] text-[#f5b923]">{typeof value === 'number' ? `${value} / 5` : '-'}</strong>
+                  <div key={label} className="flex items-center justify-between gap-3 border-b border-outline-variant/40 pb-2 last:border-0 last:pb-0">
+                    <span className="text-sm text-on-surface-variant">{label}</span>
+                    {typeof value === 'number' ? (
+                      <span className="flex items-center gap-0.5">
+                        {[1, 2, 3, 4, 5].map((n) => (
+                          <span
+                            key={n}
+                            className={`material-symbols-outlined text-[18px] ${n <= value ? 'text-amber-400' : 'text-outline-variant'}`}
+                            style={n <= value ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                          >
+                            star
+                          </span>
+                        ))}
+                      </span>
+                    ) : (
+                      <strong className="font-label text-on-surface-variant">-</strong>
+                    )}
                   </div>
                 ))}
               </div>
             </section>
-            <section className="rounded-xl border border-[#252c38] bg-[#151b25] p-5">
-              <h2 className="mb-4 font-['Newsreader'] text-xl font-bold text-white">Staj Süreci</h2>
+            <section className="rounded-xl border border-outline-variant/40 bg-surface-container-low p-5">
+              <h2 className="mb-4 font-display text-xl font-bold text-primary">Staj Süreci</h2>
               <dl className="space-y-3 text-sm">
-                <div className="flex justify-between gap-3"><dt className="text-[#9ea8bb]">Başvuru kanalı</dt><dd>{formatValue(detail.interview?.applicationMethod)}</dd></div>
-                <div className="flex justify-between gap-3"><dt className="text-[#9ea8bb]">İş teklifi</dt><dd>{detail.returnOfferReceived ? 'Aldım' : 'Almadım'}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-on-surface-variant">Başvuru kanalı</dt><dd>{formatValue(detail.interview?.applicationMethod)}</dd></div>
+                <div className="flex justify-between gap-3"><dt className="text-on-surface-variant">İş teklifi</dt><dd>{detail.returnOfferReceived ? 'Aldım' : 'Almadım'}</dd></div>
               </dl>
-              {detail.interview?.description && <p className="mt-4 border-t border-[#252c38] pt-4 text-sm leading-6 text-[#c6c6cd]">{detail.interview.description}</p>}
+              {detail.interview?.description && <p className="mt-4 border-t border-outline-variant/40 pt-4 text-sm leading-6 text-on-surface-variant">{detail.interview.description}</p>}
             </section>
           </div>
 
-          {adviceText && <div className="mb-8 rounded-xl border border-[#252c38] bg-[#151b25] p-5"><h2 className="mb-2 font-['Newsreader'] text-xl font-bold text-white">Ek Tavsiye</h2><p className="whitespace-pre-line text-sm leading-6 text-[#c6c6cd]">{adviceText}</p></div>}
+          {adviceText && <div className="mb-8 rounded-xl border border-outline-variant/40 bg-surface-container-low p-5"><h2 className="mb-2 font-display text-xl font-bold text-primary">Ek Tavsiye</h2><p className="whitespace-pre-line text-sm leading-6 text-on-surface-variant">{adviceText}</p></div>}
 
-          <div className="border-t border-[#252c38] pt-7">
-            <h2 className="mb-4 font-['Newsreader'] text-2xl font-bold text-white">Yorumlar</h2>
+          <div className="border-t border-outline-variant/40 pt-7">
+            <h2 className="mb-4 font-display text-2xl font-bold text-primary">Yorumlar</h2>
             <form onSubmit={handleComment} className="mb-6 flex flex-col gap-3 md:flex-row">
-              <textarea value={comment} onChange={(event) => setComment(event.target.value)} rows={2} placeholder="Bu staj deneyimi hakkında yorum yapın..." className="min-h-14 flex-1 resize-y rounded-lg border border-[#303847] bg-[#151b25] p-3 text-sm text-white outline-none placeholder:text-[#657084] focus:border-[#9224dc]" />
-              <button type="submit" className="inline-flex h-fit items-center justify-center gap-2 rounded-lg bg-[#9224dc] px-5 py-3 font-['IBM_Plex_Mono'] text-xs font-bold text-white hover:bg-[#a93ff0]">Yorum Gönder<span className="material-symbols-outlined text-[16px]">send</span></button>
+              <textarea value={comment} onChange={(event) => setComment(event.target.value)} rows={2} placeholder="Bu staj deneyimi hakkında yorum yapın..." className="min-h-14 flex-1 resize-y rounded-lg border border-outline-variant/50 bg-surface-container-low p-3 text-sm text-on-surface outline-none placeholder:text-on-surface-variant focus:border-secondary" />
+              <button type="submit" className="inline-flex h-fit items-center justify-center gap-2 rounded-lg bg-secondary px-5 py-3 font-label text-xs font-bold text-white hover:bg-primary-container">Yorum Gönder<span className="material-symbols-outlined text-[16px]">send</span></button>
             </form>
-            {commentError && <p className="mb-4 text-sm text-[#f29aa8]">{commentError}</p>}
-            {reactionError && <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-[#f29aa8]">{reactionError}</p>}
-            {comments.length === 0 ? <p className="text-sm text-[#657084]">Henüz yorum yapılmamış. İlk yorumu siz yazın.</p> : <div className="space-y-3">{comments.map((item) => { const reaction = commentReactions[String(item.id)] || { positiveCount: 0, negativeCount: 0 }; const commentUrl = normalizeLinkedInUrl(item.linkedInProfileUrl); const profileHref = commentUrl || '#'; const isPreviewOpen = activeProfilePreview === String(item.id); return <article key={item.id} className="rounded-lg border border-[#252c38] bg-[#151b25] p-4"><div className="mb-3 flex items-start justify-between"><div className="flex items-center gap-2 flex-1"><div className="shrink-0">{item.profilePictureUrl ? <img className="h-8 w-8 rounded-full object-cover border border-[#303847]" src={item.profilePictureUrl} alt={item.name} /> : <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[#2a1740] font-['IBM_Plex_Mono'] text-[11px] font-semibold text-[#c88cf1] border border-[#3b2a4d]">{item.initials}</span>}</div><div className="relative flex-1 min-w-0"><a href={profileHref} target={commentUrl ? '_blank' : undefined} rel={commentUrl ? 'noreferrer' : undefined} onClick={(event) => { if (!commentUrl) { event.preventDefault(); setActiveProfilePreview(isPreviewOpen ? null : String(item.id)) } }} className="text-sm font-semibold text-[#c88cf1] underline decoration-[#72449b] underline-offset-2 hover:text-white">{item.name}</a><div className={`absolute bottom-full left-0 z-30 mb-2 w-56 rounded-xl border border-[#3b2a4d] bg-[#111722] p-3 shadow-[0_12px_30px_rgba(0,0,0,0.4)] transition-all duration-200 ${isPreviewOpen ? 'block opacity-100' : 'hidden opacity-0'}`}><div className="flex items-center gap-2">{item.profilePictureUrl ? <img className="h-9 w-9 rounded-full object-cover" src={item.profilePictureUrl} alt="" /> : <span className="flex h-9 w-9 items-center justify-center rounded-full bg-[#2a1740] text-xs text-[#c88cf1]">{item.initials}</span>}<div className="min-w-0"><p className="truncate text-xs font-semibold text-white">{item.name}</p><p className="text-[10px] text-[#8d96a8]">Staj yorumu</p></div></div>{commentUrl && <a href={commentUrl} target="_blank" rel="noreferrer" className="mt-3 block rounded-lg bg-[#9224dc] px-3 py-2 text-center font-['IBM_Plex_Mono'] text-[10px] font-bold text-white hover:bg-[#a93ff0]">Profile Git</a>}</div><span className="block text-xs text-[#657084] mt-1">{item.date}</span></div></div>{(user?.id === item.userId || item.isOwn) && editingCommentId !== item.id && <div className="flex gap-1"><button type="button" onClick={() => { setEditingCommentId(String(item.id)); setEditingCommentText(item.text) }} className="rounded-lg border border-[#315b5b] px-2.5 py-1.5 text-xs text-[#65e0ba] hover:bg-[#1d3c3c] transition" title="Düzenle"><span className="material-symbols-outlined text-[15px]">edit</span></button><button type="button" disabled={deletingCommentId === String(item.id)} onClick={() => handleDeleteComment(String(item.id))} className="rounded-lg border border-[#633b45] px-2.5 py-1.5 text-xs text-[#f29aa8] hover:bg-[#3c2029] transition disabled:opacity-50" title="Sil"><span className="material-symbols-outlined text-[15px]">delete</span></button></div>}</div>{editingCommentId === String(item.id) && (user?.id === item.userId || item.isOwn) ? <div className="mt-3 flex gap-2"><input type="text" value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} placeholder="Yorumunuzu düzenleyin..." className="flex-1 rounded-lg border border-[#303847] bg-[#151b25] px-3 py-2 text-sm text-white outline-none focus:border-[#9224dc] focus:ring-1 focus:ring-[#9224dc]" /><button type="button" onClick={() => handleUpdateComment(String(item.id))} className="rounded-lg bg-[#65e0ba] px-3 py-2 font-['IBM_Plex_Mono'] text-xs font-bold text-[#151b25] hover:bg-[#4dc9a1] transition">Kaydet</button><button type="button" onClick={() => { setEditingCommentId(null); setEditingCommentText('') }} className="rounded-lg border border-[#657084] px-3 py-2 font-['IBM_Plex_Mono'] text-xs text-[#657084] hover:bg-[#252c38] transition">İptal</button></div> : <p className="text-sm leading-6 text-[#c6c6cd]">{item.text}</p>}<div className="mt-3 flex items-center gap-2"><button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), true)} className="inline-flex items-center gap-1 rounded-lg border border-[#315b5b] px-2.5 py-1.5 text-xs text-[#65e0ba] hover:bg-[#1d3c3c] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_up</span>{reaction.positiveCount}</button><button type="button" disabled={reactingCommentId === String(item.id)} onClick={() => handleCommentReaction(String(item.id), false)} className="inline-flex items-center gap-1 rounded-lg border border-[#633b45] px-2.5 py-1.5 text-xs text-[#f29aa8] hover:bg-[#3c2029] disabled:opacity-50"><span className="material-symbols-outlined text-[15px]">thumb_down</span>{reaction.negativeCount}</button></div></article> })}</div>}
+            {commentError && <p className="mb-4 text-sm text-rose-600">{commentError}</p>}
+            {reactionError && <p className="mb-4 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-2 text-sm text-rose-600">{reactionError}</p>}
+            {comments.filter((c) => !c.isHidden || c.isOwn).length === 0 ? (
+              <p className="text-sm text-on-surface-variant">Henüz yorum yapılmamış. İlk yorumu siz yazın.</p>
+            ) : (
+              <div className="space-y-3">
+                {comments.filter((c) => !c.isHidden || c.isOwn).map((item) => {
+                  const visibleReplies = (item.replies || []).filter((reply) => !reply.isHidden || reply.isOwn)
+                  return (
+                    <div key={item.id}>
+                      {renderComment(item)}
+                      {visibleReplies.length > 0 && (
+                        <div className="mt-2 ml-6 space-y-2 border-l-2 border-outline-variant/40 pl-4">
+                          {visibleReplies.map((reply) => renderComment(reply, true))}
+                        </div>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
           </div>
         </section>
       </div>

@@ -215,14 +215,14 @@ export default function InternshipFormPage() {
       console.error('Staj ekleme hatası:', err)
       console.error('Error response:', JSON.stringify(err.response?.data, null, 2))
       console.error('Error status:', err.response?.status)
-      navigate('/profile')
+      window.location.href = '/profile'
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <main className="min-h-screen bg-[#171b26] py-12 px-4 flex justify-center text-[#333] font-['Newsreader']">
+    <main className="min-h-screen bg-background py-12 px-4 flex justify-center text-on-surface font-body">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl p-8 md:p-12">
         {/* Staj Değerlendirme Başlığı */}
         <section className="border-b border-dashed border-gray-300 pb-8 mb-8 flex justify-between items-start">
@@ -231,7 +231,7 @@ export default function InternshipFormPage() {
               <span className="material-symbols-outlined text-[18px]">assignment</span>
               STAJ DEĞERLENDİRME FORMU
             </div>
-            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900">{formData.companyName || (isEditing ? 'Staj Değerlendirmesini Düzenle' : 'Yeni Staj Değerlendirmesi')}</h1>
+            <h1 className="font-display text-3xl sm:text-4xl font-bold text-primary">{formData.companyName || (isEditing ? 'Staj Değerlendirmesini Düzenle' : 'Yeni Staj Değerlendirmesi')}</h1>
           </div>
         </section>
 
@@ -271,7 +271,7 @@ export default function InternshipFormPage() {
                     }
                   }}
                   onBlur={() => setTimeout(() => setShowCompanyDropdown(false), 200)}
-                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
                 />
                 {showCompanyDropdown && filteredCompanies.length > 0 && (
                   <div className="absolute top-full left-0 right-0 border border-gray-300 border-t-0 bg-white rounded-b shadow-lg z-10">
@@ -282,7 +282,7 @@ export default function InternshipFormPage() {
                           setFormData({ ...formData, companyName: company.name })
                           setShowCompanyDropdown(false)
                         }}
-                        className="px-3 py-2 hover:bg-indigo-50 cursor-pointer text-sm border-b last:border-b-0"
+                        className="px-3 py-2 hover:bg-surface-container-low cursor-pointer text-sm border-b last:border-b-0"
                       >
                         {company.name}
                       </div>
@@ -297,7 +297,7 @@ export default function InternshipFormPage() {
                   required
                   value={formData.universityId || formData.university}
                   onChange={(e) => setFormData({ ...formData, university: e.target.value, universityId: e.target.value })}
-                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
                 >
                   <option value="">Üniversite Seç...</option>
                   {universities.map((uni: any) => (
@@ -314,7 +314,7 @@ export default function InternshipFormPage() {
                   required
                   value={formData.departmentId || formData.department}
                   onChange={(e) => setFormData({ ...formData, department: e.target.value, departmentId: e.target.value })}
-                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
                 >
                   <option value="">Bölüm Seç...</option>
                   {departments.map((dept: any) => (
@@ -334,7 +334,7 @@ export default function InternshipFormPage() {
                     const selectedCity = cities.find((c: any) => c.id === e.target.value)
                     setFormData({ ...formData, city: selectedCity?.name || '', cityId: e.target.value })
                   }}
-                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
                 >
                   <option value="">Şehir Seç...</option>
                   {cities.map((c: any) => (
@@ -352,7 +352,7 @@ export default function InternshipFormPage() {
                   required
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
                 />
               </div>
 
@@ -364,7 +364,7 @@ export default function InternshipFormPage() {
                   min={formData.startDate}
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                  className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
                 />
               </div>
             </div>
@@ -424,19 +424,27 @@ export default function InternshipFormPage() {
               ].map((crit) => (
                 <div key={crit.key}>
                   <label className="block text-gray-700 font-medium mb-2">{crit.label}</label>
-                  <div className="flex gap-1.5">
-                    {['1', '2', '3', '4', '5'].map((num) => (
-                      <button
-                        type="button"
-                        key={num}
-                        onClick={() => setFormData({ ...formData, [crit.key]: num })}
-                        className={`w-9 h-9 border rounded flex items-center justify-center text-xs font-semibold transition ${
-                          (formData as any)[crit.key] === num ? 'bg-gray-200 border-gray-600 text-gray-900 font-bold' : 'border-gray-300 text-gray-500 hover:bg-gray-50'
-                        }`}
-                      >
-                        {num}
-                      </button>
-                    ))}
+                  <div className="flex gap-1">
+                    {[1, 2, 3, 4, 5].map((num) => {
+                      const selected = parseInt((formData as any)[crit.key]) || 0
+                      const active = num <= selected
+                      return (
+                        <button
+                          type="button"
+                          key={num}
+                          onClick={() => setFormData({ ...formData, [crit.key]: String(num) })}
+                          aria-label={`${num} yıldız`}
+                          className="p-0.5 transition-transform hover:scale-110"
+                        >
+                          <span
+                            className={`material-symbols-outlined text-[30px] ${active ? 'text-amber-400' : 'text-gray-300'}`}
+                            style={active ? { fontVariationSettings: "'FILL' 1" } : undefined}
+                          >
+                            star
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
               ))}
@@ -455,7 +463,7 @@ export default function InternshipFormPage() {
               value={formData.experiences}
               onChange={(e) => setFormData({ ...formData, experiences: e.target.value })}
               placeholder="Bu staj sürecinde edindiğin tecrübeleri, artı ve eksi yönleriyle detaylandır..."
-              className="w-full border-gray-300 rounded p-3 text-sm focus:border-indigo-500"
+              className="w-full border-gray-300 rounded p-3 text-sm focus:border-secondary"
             />
           </section>
 
@@ -471,7 +479,7 @@ export default function InternshipFormPage() {
               value={formData.suggestions}
               onChange={(e) => setFormData({ ...formData, suggestions: e.target.value })}
               placeholder="Önerilerinizi buraya yazabilirsiniz..."
-              className="w-full border-gray-300 rounded p-3 text-sm focus:border-indigo-500"
+              className="w-full border-gray-300 rounded p-3 text-sm focus:border-secondary"
             />
           </section>
 
@@ -487,7 +495,7 @@ export default function InternshipFormPage() {
               <select
                 value={formData.appliedVia}
                 onChange={(e) => setFormData({ ...formData, appliedVia: e.target.value })}
-                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-indigo-500"
+                className="w-full border border-gray-300 rounded p-2 text-sm focus:border-secondary"
               >
                 <option value="">Başvuru Yöntemi Seç...</option>
                 <option value="LinkedIn">LinkedIn</option>
@@ -505,7 +513,7 @@ export default function InternshipFormPage() {
                 value={formData.interviewProcess}
                 onChange={(e) => setFormData({ ...formData, interviewProcess: e.target.value })}
                   placeholder="Mülakat sürecinin nasıl geçtiğini ve sorulan soruları detaylandırın..."
-                className="w-full border-gray-300 rounded p-3 text-sm focus:border-indigo-500"
+                className="w-full border-gray-300 rounded p-3 text-sm focus:border-secondary"
               />
             </div>
 
@@ -579,7 +587,7 @@ export default function InternshipFormPage() {
             <button
               type="submit"
               disabled={loading}
-              className="bg-[#101415] hover:bg-black text-white px-8 py-3 rounded-full text-sm font-semibold tracking-wide transition shadow-lg"
+              className="bg-secondary hover:bg-primary-container text-on-secondary px-8 py-3 rounded-full text-sm font-semibold tracking-wide transition shadow-lg"
             >
               {loading ? 'Gönderiliyor...' : 'Değerlendirmeyi Kaydet'}
             </button>
